@@ -16,8 +16,6 @@ package task
 
 import (
 	"go.uber.org/zap"
-	"math"
-	"math/big"
 	"powervoting-server/config"
 	"powervoting-server/contract"
 	"powervoting-server/db"
@@ -46,11 +44,11 @@ func VotingCount(ethClient model.GoEthClient) {
 		now = time.Now().Unix()
 	}
 	proposals, err := db.GetProposalList(ethClient.Id, now)
-	zap.L().Info("proposal list: %+v\n", zap.Reflect("proposals", proposals))
 	if err != nil {
 		zap.L().Error("get proposal from db error:", zap.Error(err))
 		return
 	}
+	zap.L().Info("get proposal list success!", zap.Reflect("proposals", proposals))
 	for _, proposal := range proposals {
 		SyncVote(ethClient, proposal.ProposalId)
 		voteInfos, err := db.GetVoteList(ethClient.Id, proposal.ProposalId)
@@ -58,8 +56,8 @@ func VotingCount(ethClient model.GoEthClient) {
 			zap.L().Error("get vote info from db error:", zap.Error(err))
 			continue
 		}
+		zap.L().Info("get vote list success!", zap.Reflect("voteInfos", voteInfos))
 		var voteList []model.Vote4Counting
-		zap.L().Info("voteInfos: %+v\n", zap.Reflect("voteInfos", voteInfos))
 		for _, voteInfo := range voteInfos {
 			list, err := utils.DecodeVoteList(voteInfo)
 			if err != nil {
@@ -68,60 +66,25 @@ func VotingCount(ethClient model.GoEthClient) {
 			}
 			voteList = append(voteList, list...)
 		}
-		zap.L().Info("voteList: %+v\n", zap.Reflect("voteList", voteList))
+		zap.L().Info("decode vote list success!", zap.Reflect("voteList", voteList))
 		var voteHistoryList []model.VoteHistory
-		// calc total power
-		totalSpPower := new(big.Int)
-		totalClientPower := new(big.Int)
-		totalTokenPower := new(big.Int)
-		totalDeveloperPower := new(big.Int)
-		powerMap := make(map[string]model.Power)
-		addressIsCount := make(map[string]bool)
-		for _, vote := range voteList {
-			power, err := utils.GetPower(vote.Address, ethClient)
-			if err != nil {
-				zap.L().Error("get power error: ", zap.Error(err))
-				return
-			}
-			zap.L().Info("address: %s, power: %+v\n", zap.Reflect("address", vote.Address), zap.Reflect("power", power))
-			if !addressIsCount[vote.Address] {
-				powerMap[vote.Address] = power
-				totalSpPower.Add(totalSpPower, power.SpPower)
-				totalClientPower.Add(totalClientPower, power.ClientPower)
-				totalTokenPower.Add(totalTokenPower, power.TokenHolderPower)
-				totalDeveloperPower.Add(totalDeveloperPower, power.DeveloperPower)
-				addressIsCount[vote.Address] = true
-			}
-		}
 		// vote counting
 		var result = make(map[int64]float64, 5) // max 5 options
 		for _, vote := range voteList {
-			power := powerMap[vote.Address]
 			var votes float64
+			balance, err := utils.GetWBTC(vote.Address, ethClient.Client)
+			if err != nil {
+				zap.L().Error("Get balance error", zap.Error(err))
+				return
+			}
 			if vote.Votes != 0 {
-				var spPercent float64
-				var clientPercent float64
-				var tokenPercent float64
-				var developerPercent float64
-				if totalSpPower.Int64() != 0 {
-					spPercent = float64(power.SpPower.Int64()) / float64(totalSpPower.Int64())
-				}
-				if totalClientPower.Int64() != 0 {
-					clientPercent = float64(power.ClientPower.Int64()) / float64(totalClientPower.Int64())
-				}
-				if totalTokenPower.Int64() != 0 {
-					tokenPercent = float64(power.TokenHolderPower.Int64()) / float64(totalTokenPower.Int64())
-				}
-				if totalDeveloperPower.Int64() != 0 {
-					developerPercent = float64(power.DeveloperPower.Int64()) / float64(totalDeveloperPower.Int64())
-				}
 				var votePercent = float64(vote.Votes) / 100
-				votes = ((spPercent * 25) + (clientPercent * 25) + (tokenPercent * 25) + (developerPercent * 25)) * votePercent
+				votes = (float64(balance.Int64()) * votePercent) / 100000000
 			}
 			voteHistory := model.VoteHistory{
 				ProposalId: proposal.ProposalId,
 				OptionId:   vote.OptionId,
-				Votes:      math.Round(votes*100) / 100,
+				Votes:      int64(votes),
 				Address:    vote.Address,
 				Network:    ethClient.Id,
 			}
@@ -142,7 +105,7 @@ func VotingCount(ethClient model.GoEthClient) {
 			voteResult := model.VoteResult{
 				ProposalId: proposal.ProposalId,
 				OptionId:   int64(i),
-				Votes:      math.Round(result[int64(i)]*100) / 100,
+				Votes:      int64(result[int64(i)]),
 				Network:    ethClient.Id,
 			}
 			voteResultList = append(voteResultList, voteResult)

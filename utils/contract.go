@@ -16,73 +16,68 @@ package utils
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/json"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"go.uber.org/zap"
 	"math/big"
 	"powervoting-server/model"
 	"strconv"
+	"strings"
 )
 
-// GetPower get power
-func GetPower(address string, client model.GoEthClient) (model.Power, error) {
-	num, err := rand.Int(rand.Reader, big.NewInt(1440))
+func GetWBTC(ethAddress string, client *ethclient.Client) (*big.Int, error) {
+	abiJSON := `
+	 [
+	   {
+		"inputs": [
+		  {
+			"internalType": "address",
+			"name": "account",
+			"type": "address"
+		  }
+		],
+		"name": "balanceOf",
+		"outputs": [
+		  {
+			"internalType": "uint256",
+			"name": "",
+			"type": "uint256"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  }
+	 ]
+	 `
+	contractAbi, err := abi.JSON(strings.NewReader(abiJSON))
 	if err != nil {
-		zap.L().Error("Generate random number error: ", zap.Error(err))
-		return model.Power{}, err
+		zap.L().Error("abi json error", zap.Error(err))
 	}
-	data, err := client.OracleAbi.Pack("getPower", common.HexToAddress(address), num)
+
+	data, err := contractAbi.Pack("balanceOf", common.HexToAddress(ethAddress))
 	if err != nil {
-		zap.L().Error("Pack method and param error: ", zap.Error(err))
-		return model.Power{}, err
+		zap.L().Error("abi pack error", zap.Error(err))
 	}
+
+	contractAddress := common.HexToAddress("0x2868d708e442A6a940670d26100036d426F1e16b")
 	msg := ethereum.CallMsg{
-		To:   &client.OracleContract,
+		To:   &contractAddress,
 		Data: data,
 	}
-	result, err := client.Client.CallContract(context.Background(), msg, nil)
+
+	result, err := client.CallContract(context.Background(), msg, nil)
 	if err != nil {
-		zap.L().Error("Call contract error: ", zap.Error(err))
-		return model.Power{}, err
+		zap.L().Error("Call contract error", zap.Error(err))
 	}
-	unpack, err := client.OracleAbi.Unpack("getPower", result)
+
+	unpack, err := contractAbi.Unpack("balanceOf", result)
 	if err != nil {
-		zap.L().Error("Unpack return data to interface error: ", zap.Error(err))
-		return model.Power{}, err
+		zap.L().Error("Unpack return data to interface error", zap.Error(err))
 	}
-	powerInterface := unpack[0]
-	marshal, err := json.Marshal(powerInterface)
-	if err != nil {
-		zap.L().Error("marshal error: ", zap.Error(err))
-		return model.Power{}, err
-	}
-	var contractPower model.ContractPower
-	err = json.Unmarshal(marshal, &contractPower)
-	if err != nil {
-		zap.L().Error("unmarshal error: ", zap.Error(err))
-		return model.Power{}, err
-	}
-	var power model.Power
-	power.FipEditorPower = contractPower.FipEditorPower
-	power.TokenHolderPower = contractPower.TokenHolderPower
-	power.DeveloperPower = contractPower.DeveloperPower
-	totalClientPower := new(big.Int)
-	for _, clientPower := range contractPower.ClientPower {
-		power := new(big.Int)
-		power.SetBytes(clientPower)
-		totalClientPower.Add(totalClientPower, power)
-	}
-	power.ClientPower = totalClientPower
-	totalSpPower := new(big.Int)
-	for _, spPower := range contractPower.SpPower {
-		power := new(big.Int)
-		power.SetBytes(spPower)
-		totalSpPower.Add(totalSpPower, power)
-	}
-	power.SpPower = totalSpPower
-	return power, nil
+	return unpack[0].(*big.Int), nil
 }
 
 func GetTimestamp(client model.GoEthClient) (int64, error) {

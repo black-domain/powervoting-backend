@@ -48,23 +48,6 @@ func TestGetVote(t *testing.T) {
 	fmt.Printf("vote info: %+v\n", vote)
 }
 
-func TestGetPower(t *testing.T) {
-
-	config.InitConfig("../")
-	client, err := contract.GetClient(314159)
-	if err != nil {
-		zap.L().Error("Get client error: ", zap.Error(err))
-		return
-	}
-	power, err := GetPower("0xBc27ca842D22cD5BdBC41B27A571EC1FbB559307", client)
-	if err != nil {
-		zap.L().Error("Get power error: ", zap.Error(err))
-		return
-	}
-	fmt.Printf("power: %+v\n", power.SpPower)
-
-}
-
 func TestGetProposalLatestId(t *testing.T) {
 	config.InitConfig("../")
 	ethClient, err := contract.GetClient(314159)

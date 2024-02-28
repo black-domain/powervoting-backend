@@ -23,10 +23,9 @@ WORKDIR /dist
 RUN cp /build/app .
 RUN cp /build/configuration.yaml .
 RUN cp /build/abi/power-voting.json .
-RUN cp /build/abi/oracle.json .
 
 # expose server port
-EXPOSE 9999
+EXPOSE 9000
 
 # run
 CMD ["/dist/app"]

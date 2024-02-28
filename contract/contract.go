@@ -53,9 +53,7 @@ func GetClient(id int64) (model.GoEthClient, error) {
 				Name:                network.Name,
 				Rpc:                 network.Rpc,
 				PowerVotingContract: network.PowerVotingContract,
-				OracleContract:      network.OracleContract,
 				PowerVotingAbi:      network.PowerVotingAbi,
-				OracleAbi:           network.OracleAbi,
 			}
 			break
 		}
@@ -79,7 +77,6 @@ func getGoEthClient(clientConfig model.ClientConfig) (model.GoEthClient, error) 
 
 	// contract address, wallet private key , wallet address
 	powerVotingContract := common.HexToAddress(clientConfig.PowerVotingContract)
-	oracleContract := common.HexToAddress(clientConfig.OracleContract)
 
 	// open abi file and parse json
 	powerVotingFile, err := os.Open(clientConfig.PowerVotingAbi)
@@ -93,27 +90,13 @@ func getGoEthClient(clientConfig model.ClientConfig) (model.GoEthClient, error) 
 		return model.GoEthClient{}, err
 	}
 
-	// open abi file and parse json
-	oracleFile, err := os.Open(clientConfig.OracleAbi)
-	if err != nil {
-		zap.L().Error("open abi file error: ", zap.Error(err))
-		return model.GoEthClient{}, err
-	}
-	oracleAbi, err := abi.JSON(oracleFile)
-	if err != nil {
-		zap.L().Error("abi.JSON error: ", zap.Error(err))
-		return model.GoEthClient{}, err
-	}
-
 	// generate goEthClient
 	goEthClient := model.GoEthClient{
 		Id:                  clientConfig.Id,
 		Name:                clientConfig.Name,
 		Client:              client,
 		PowerVotingAbi:      powerVotingAbi,
-		OracleAbi:           oracleAbi,
 		PowerVotingContract: powerVotingContract,
-		OracleContract:      oracleContract,
 	}
 	return goEthClient, nil
 }

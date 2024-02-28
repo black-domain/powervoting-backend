@@ -26,9 +26,7 @@ type GoEthClient struct {
 	Name                string
 	Client              *ethclient.Client
 	PowerVotingAbi      abi.ABI
-	OracleAbi           abi.ABI
 	PowerVotingContract common.Address
-	OracleContract      common.Address
 }
 
 // ClientConfig config for get go-ethereum client
@@ -37,7 +35,5 @@ type ClientConfig struct {
 	Name                string
 	Rpc                 string
 	PowerVotingContract string
-	OracleContract      string
 	PowerVotingAbi      string
-	OracleAbi           string
 }

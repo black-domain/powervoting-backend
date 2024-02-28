@@ -27,20 +27,20 @@ type Vote struct {
 }
 
 type VoteResult struct {
-	Id         int64   `json:"id"`
-	ProposalId int64   `gorm:"constraint:off;not null"`
-	OptionId   int64   `json:"optionId" gorm:"not null"`
-	Votes      float64 `json:"votes" gorm:"not null"`
-	Network    int64   `json:"network" gorm:"not null"`
+	Id         int64 `json:"id"`
+	ProposalId int64 `gorm:"constraint:off;not null"`
+	OptionId   int64 `json:"optionId" gorm:"not null"`
+	Votes      int64 `json:"votes" gorm:"not null"`
+	Network    int64 `json:"network" gorm:"not null"`
 }
 
 type VoteHistory struct {
-	Id         int64   `json:"id"`
-	ProposalId int64   `gorm:"constraint:off" gorm:"not null"`
-	Address    string  `json:"address" gorm:"not null"`
-	OptionId   int64   `json:"optionId" gorm:"not null"`
-	Votes      float64 `json:"votes" gorm:"not null"`
-	Network    int64   `json:"network" gorm:"not null"`
+	Id         int64  `json:"id"`
+	ProposalId int64  `gorm:"constraint:off" gorm:"not null"`
+	Address    string `json:"address" gorm:"not null"`
+	OptionId   int64  `json:"optionId" gorm:"not null"`
+	Votes      int64  `json:"votes" gorm:"not null"`
+	Network    int64  `json:"network" gorm:"not null"`
 }
 
 type ContractVote struct {

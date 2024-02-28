@@ -41,7 +41,5 @@ type Network struct {
 	Name                string
 	Rpc                 string
 	PowerVotingAbi      string
-	OracleAbi           string
 	PowerVotingContract string
-	OracleContract      string
 }

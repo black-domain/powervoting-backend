@@ -29,7 +29,7 @@ func TaskScheduler() {
 	syncVoteTask := task.SyncVoteHandler
 
 	// 5 minutes
-	votingCountSpec := "0 0/5 * * * ?"
+	votingCountSpec := "0 0/1 * * * ?"
 	// 1 minutes
 	syncSpec := "0/30 * * * * ?"
 

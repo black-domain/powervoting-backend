@@ -14,10 +14,10 @@
 
 
 
-## 4.Obtain the PowerVoting backend code, with the repository branch set to: dev-filecoin
+## 4.Obtain the PowerVoting backend code, with the repository branch set to: bob
 
 ```bash
-git clone https://gitlab.com/storswiftlabs/wh/dapp/power-voting/backend.git
+git clone https://github.com/black-domain/powervoting-backend.git
 ```
 
 
@@ -25,7 +25,7 @@ git clone https://gitlab.com/storswiftlabs/wh/dapp/power-voting/backend.git
 ## 5.Switch branch
 
 ```bash
-git checkout dev-filecoin
+git checkout bob
 ```
 
 

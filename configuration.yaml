@@ -1,7 +1,6 @@
 server:
   # service startup port
-  port: :9999
-
+  port: :9000
 
 # drand api
 drand:
@@ -19,10 +18,8 @@ mysql:
   password: root
 
 network:
-  - id: 314159
-    name: FileCoin-Calibration
-    rpc: https://api.calibration.node.glif.io/rpc/v1
-    powerVotingAbi: power-voting.json
-    oracleAbi: oracle.json
-    powerVotingContract: 0x0000000000000000000000000000000000000000
-    oracleContract: 0x0000000000000000000000000000000000000000
+  - id: 111
+    name: puff-bob-jznbxtoq7h
+    rpc: https://l2-puff-bob-jznbxtoq7h.t.conduit.xyz
+    powerVotingAbi: /dist/power-voting.json
+    powerVotingContract:
